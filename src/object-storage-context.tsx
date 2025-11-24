@@ -14,7 +14,7 @@ const ObjectStorageContext = createContext<IObjectStorage | null>(null);
  * based on the supplied configuration
  */
 export function ObjectStorageProvider({ config, children }: ObjectStorageProviderProps) {
-  const objectStorage = useMemo(() => createObjectStorage(config), [config]);
+  const objectStorage = useMemo(() => createObjectStorage(config ?? {version: 1, type: "demo"}), [config]);
 
   return (
     <ObjectStorageContext.Provider value={objectStorage}>
