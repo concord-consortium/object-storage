@@ -7,7 +7,8 @@ import {
   StoredObject,
   ObjectWithId,
   MonitorCallback,
-  DemonitorFunction
+  DemonitorFunction,
+  AddOptions
 } from './types';
 
 export class DemoObjectStorage implements IObjectStorage {
@@ -114,10 +115,10 @@ export class DemoObjectStorage implements IObjectStorage {
 
   /**
    * Adds both metadata and data documents for a new object
-   * Returns the generated object ID (nanoid)
+   * Returns the generated object ID (nanoid) or the provided ID if specified in options
    */
-  async add(object: StoredObject): Promise<string> {
-    const id = nanoid();
+  async add(object: StoredObject, options?: AddOptions): Promise<string> {
+    const id = options?.id ?? nanoid();
     const objectWithId: ObjectWithId = {
       id,
       metadata: object.metadata,
@@ -169,6 +170,13 @@ export class DemoObjectStorage implements IObjectStorage {
       return undefined;
     }
     return obj.data;
+  }
+
+  /**
+   * Generates a new unique ID using nanoid
+   */
+  genId(): string {
+    return nanoid();
   }
 
   /**

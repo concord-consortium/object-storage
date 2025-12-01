@@ -67,6 +67,44 @@ describe('DemoObjectStorage', () => {
 
       expect(retrieved).toEqual(object);
     });
+
+    it('should use provided ID when specified in options', async () => {
+      const object: StoredObject = {
+        metadata: { name: 'test' },
+        data: { value: 123 }
+      };
+      const customId = 'custom-id-123';
+
+      const id = await storage.add(object, { id: customId });
+
+      expect(id).toBe(customId);
+    });
+
+    it('should store object with custom ID so it can be retrieved', async () => {
+      const object: StoredObject = {
+        metadata: { name: 'test' },
+        data: { value: 456 }
+      };
+      const customId = 'my-custom-id';
+
+      const id = await storage.add(object, { id: customId });
+      const retrieved = await storage.read(id);
+
+      expect(retrieved).toEqual(object);
+    });
+
+    it('should generate ID when options is empty object', async () => {
+      const object: StoredObject = {
+        metadata: { name: 'test' },
+        data: { value: 789 }
+      };
+
+      const id = await storage.add(object, {});
+
+      expect(id).toBeDefined();
+      expect(typeof id).toBe('string');
+      expect(id.length).toBeGreaterThan(0);
+    });
   });
 
   describe('read', () => {
@@ -370,6 +408,40 @@ describe('DemoObjectStorage', () => {
 
       expect(callback1).toHaveBeenCalledTimes(2);
       expect(callback2).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('genId', () => {
+    it('should generate a unique ID', () => {
+      const id = storage.genId();
+
+      expect(id).toBeDefined();
+      expect(typeof id).toBe('string');
+      expect(id.length).toBeGreaterThan(0);
+    });
+
+    it('should generate different IDs on subsequent calls', () => {
+      const id1 = storage.genId();
+      const id2 = storage.genId();
+      const id3 = storage.genId();
+
+      expect(id1).not.toBe(id2);
+      expect(id2).not.toBe(id3);
+      expect(id1).not.toBe(id3);
+    });
+
+    it('should generate IDs that can be used with add method', async () => {
+      const customId = storage.genId();
+      const object: StoredObject = {
+        metadata: { name: 'test' },
+        data: { value: 123 }
+      };
+
+      const id = await storage.add(object, { id: customId });
+      const retrieved = await storage.read(id);
+
+      expect(id).toBe(customId);
+      expect(retrieved).toEqual(object);
     });
   });
 

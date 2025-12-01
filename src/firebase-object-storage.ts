@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import {
   FirebaseObjectStorageConfig,
   IObjectStorage,
@@ -6,7 +7,8 @@ import {
   StoredObject,
   ObjectWithId,
   MonitorCallback,
-  DemonitorFunction
+  DemonitorFunction,
+  AddOptions
 } from './types';
 
 export class FirebaseObjectStorage implements IObjectStorage {
@@ -84,13 +86,13 @@ export class FirebaseObjectStorage implements IObjectStorage {
 
   /**
    * Adds both metadata and data documents for a new object
-   * Returns the generated object ID (nanoid)
+   * Returns the generated object ID (nanoid) or the provided ID if specified in options
    */
-  async add(object: StoredObject): Promise<string> {
-    // TODO: Generate nanoid
+  async add(object: StoredObject, options?: AddOptions): Promise<string> {
+    // TODO: Generate nanoid if not provided in options
     // TODO: Add metadata document to Firebase
     // TODO: Add data document to Firebase
-    const newObjectId = 'placeholder-id';
+    const newObjectId = options?.id ?? 'placeholder-id';
     return newObjectId;
   }
 
@@ -120,5 +122,12 @@ export class FirebaseObjectStorage implements IObjectStorage {
   async readData(objectId: string): Promise<ObjectData | undefined> {
     // TODO: Read data document from Firebase
     return {};
+  }
+
+  /**
+   * Generates a new unique ID using nanoid
+   */
+  genId(): string {
+    return nanoid();
   }
 }
