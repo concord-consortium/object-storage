@@ -14,3 +14,4 @@ export {
   MonitorCallback,
   DemonitorFunction
 } from './types';
+export * from './typed-object';
