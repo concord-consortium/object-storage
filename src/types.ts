@@ -1,12 +1,31 @@
 export interface DemoObjectStorageConfig {
-  type: "demo";
   version: 1;
+  type: "demo";
 }
 
-export interface FirebaseObjectStorageConfig {
-  type: "firebase";
-  version: 1;
+export interface AuthenticatedUser {
+  type: "authenticated";
+  jwt: string;
+  contextId: string;
+  platformId: string;
+  platformUserId: string;
+  resourceLinkId: string;
 }
+
+export interface AnonymousUser {
+  type: "anonymous";
+  runKey: string;
+}
+
+export type FirebaseObjectStorageUser = AuthenticatedUser | AnonymousUser;
+
+export interface FirebaseObjectStorageConfig {
+  version: 1;
+  type: "firebase";
+  app: any; // TODO: replace with Firebase App type
+  root: string;
+  user: FirebaseObjectStorageUser;
+};
 
 export type ObjectStorageConfig = DemoObjectStorageConfig | FirebaseObjectStorageConfig;
 

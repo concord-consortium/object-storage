@@ -1,11 +1,12 @@
 {
   "name": "@concord-consortium/object-storage",
-  "version": "1.0.0-pre.4",
+  "version": "1.0.0-pre.5",
   "description": "A TypeScript library for object storage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -25,6 +26,7 @@
     "access": "public"
   },
   "dependencies": {
+    "firebase": "^9.8.1",
     "nanoid": "^3.3.7"
   },
   "peerDependencies": {

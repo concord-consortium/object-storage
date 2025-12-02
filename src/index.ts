@@ -6,6 +6,7 @@ export {
   IObjectStorage,
   ObjectStorageConfig,
   DemoObjectStorageConfig,
+  FirebaseObjectStorageUser,
   FirebaseObjectStorageConfig,
   ObjectMetadata,
   ObjectData,
