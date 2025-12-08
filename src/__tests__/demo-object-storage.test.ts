@@ -1,5 +1,5 @@
 import { DemoObjectStorage } from '../demo-object-storage';
-import { StoredObject, ObjectWithId, MonitorCallback } from '../types';
+import { StoredObject, ObjectMetadataWithId, MonitorCallback } from '../types';
 
 describe('DemoObjectStorage', () => {
   let storage: DemoObjectStorage;
@@ -168,14 +168,14 @@ describe('DemoObjectStorage', () => {
     });
   });
 
-  describe('listMine', () => {
+  describe('list', () => {
     it('should return an empty array when no objects exist', async () => {
-      const result = await storage.listMine();
+      const result = await storage.list('q1');
 
       expect(result).toEqual([]);
     });
 
-    it('should return all stored objects with IDs', async () => {
+    it('should return metadata for all stored objects with IDs', async () => {
       const object1: StoredObject = {
         metadata: { name: 'test1' },
         data: { value: 1 }
@@ -188,28 +188,20 @@ describe('DemoObjectStorage', () => {
       const id1 = await storage.add(object1);
       const id2 = await storage.add(object2);
 
-      const result = await storage.listMine();
+      const result = await storage.list('q1');
 
       expect(result).toHaveLength(2);
       expect(result).toEqual(
         expect.arrayContaining([
-          { id: id1, ...object1 },
-          { id: id2, ...object2 }
+          { id: id1, metadata: object1.metadata },
+          { id: id2, metadata: object2.metadata }
         ])
       );
     });
   });
 
-  describe('listLinked', () => {
-    it('should return an empty array in demo mode', async () => {
-      const result = await storage.listLinked();
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('list', () => {
-    it('should return all objects regardless of question IDs in demo mode', async () => {
+  describe('list with different question IDs', () => {
+    it('should return all objects regardless of question ID in demo mode', async () => {
       const object1: StoredObject = {
         metadata: { name: 'test1' },
         data: { value: 1 }
@@ -222,122 +214,13 @@ describe('DemoObjectStorage', () => {
       await storage.add(object1);
       await storage.add(object2);
 
-      const result = await storage.list(['q1', 'q2']);
+      const result = await storage.list('q1');
 
       expect(result).toHaveLength(2);
     });
-
-    it('should return empty array when no objects exist', async () => {
-      const result = await storage.list(['q1']);
-
-      expect(result).toEqual([]);
-    });
   });
 
-  describe('monitorMine', () => {
-    it('should invoke callback immediately with current state', async () => {
-      const object: StoredObject = {
-        metadata: { name: 'test' },
-        data: { value: 123 }
-      };
-      await storage.add(object);
 
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      storage.monitorMine(callback);
-
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            metadata: object.metadata,
-            data: object.data
-          })
-        ])
-      );
-    });
-
-    it('should invoke callback when new objects are added', async () => {
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      storage.monitorMine(callback);
-
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith([]);
-
-      const object: StoredObject = {
-        metadata: { name: 'test' },
-        data: { value: 123 }
-      };
-      await storage.add(object);
-
-      expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback).toHaveBeenLastCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            metadata: object.metadata,
-            data: object.data
-          })
-        ])
-      );
-    });
-
-    it('should stop monitoring when demonitor function is called', async () => {
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      const demonitor = storage.monitorMine(callback);
-
-      expect(callback).toHaveBeenCalledTimes(1);
-
-      demonitor();
-
-      const object: StoredObject = {
-        metadata: { name: 'test' },
-        data: { value: 123 }
-      };
-      await storage.add(object);
-
-      // Should still be 1, not called again after demonitor
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-
-    it('should support multiple monitors', async () => {
-      const callback1 = jest.fn<void, [ObjectWithId[]]>();
-      const callback2 = jest.fn<void, [ObjectWithId[]]>();
-
-      storage.monitorMine(callback1);
-      storage.monitorMine(callback2);
-
-      const object: StoredObject = {
-        metadata: { name: 'test' },
-        data: { value: 123 }
-      };
-      await storage.add(object);
-
-      expect(callback1).toHaveBeenCalledTimes(2);
-      expect(callback2).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('monitorLinked', () => {
-    it('should invoke callback with empty array in demo mode', () => {
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      storage.monitorLinked(callback);
-
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith([]);
-    });
-
-    it('should not invoke callback again when objects are added', async () => {
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      storage.monitorLinked(callback);
-
-      const object: StoredObject = {
-        metadata: { name: 'test' },
-        data: { value: 123 }
-      };
-      await storage.add(object);
-
-      expect(callback).toHaveBeenCalledTimes(1);
-    });
-  });
 
   describe('monitor', () => {
     it('should invoke callback immediately with current state', async () => {
@@ -345,25 +228,25 @@ describe('DemoObjectStorage', () => {
         metadata: { name: 'test' },
         data: { value: 123 }
       };
-      await storage.add(object);
+      const id = await storage.add(object);
 
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      storage.monitor(['q1'], callback);
+      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            metadata: object.metadata,
-            data: object.data
+            id,
+            metadata: object.metadata
           })
         ])
       );
     });
 
     it('should invoke callback when new objects are added', async () => {
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      storage.monitor(['q1', 'q2'], callback);
+      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
 
@@ -377,8 +260,8 @@ describe('DemoObjectStorage', () => {
     });
 
     it('should stop monitoring when demonitor function is called', async () => {
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      const demonitor = storage.monitor(['q1'], callback);
+      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const demonitor = storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
 
@@ -393,12 +276,12 @@ describe('DemoObjectStorage', () => {
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('should support different question ID sets as separate monitors', async () => {
-      const callback1 = jest.fn<void, [ObjectWithId[]]>();
-      const callback2 = jest.fn<void, [ObjectWithId[]]>();
+    it('should support different question IDs as separate monitors', async () => {
+      const callback1 = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const callback2 = jest.fn<void, [ObjectMetadataWithId[]]>();
 
-      storage.monitor(['q1'], callback1);
-      storage.monitor(['q2'], callback2);
+      storage.monitor('q1', callback1);
+      storage.monitor('q2', callback2);
 
       const object: StoredObject = {
         metadata: { name: 'test' },
@@ -448,8 +331,8 @@ describe('DemoObjectStorage', () => {
   describe('integration tests', () => {
     it('should handle complete workflow', async () => {
       // Start monitoring
-      const callback = jest.fn<void, [ObjectWithId[]]>();
-      const demonitor = storage.monitorMine(callback);
+      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const demonitor = storage.monitor('q1', callback);
 
       // Add objects
       const obj1: StoredObject = {
@@ -465,7 +348,7 @@ describe('DemoObjectStorage', () => {
       const id2 = await storage.add(obj2);
 
       // List all
-      const allObjects = await storage.listMine();
+      const allObjects = await storage.list('q1');
       expect(allObjects).toHaveLength(2);
 
       // Read individual objects

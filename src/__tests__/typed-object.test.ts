@@ -108,7 +108,7 @@ describe("TypedObject", () => {
         } as const,
         data: {
           "img-1": { url: "https://example.com/image.jpg" },
-          "table-1": { rows: [[1, 2], [3, 4]] },
+          "table-1": { rows: { "0": [1, 2], "1": [3, 4] } },
           "text-1": { text: "Hello, world!" },
           "obj-1": { x: 10, y: 20 },
         },
@@ -585,8 +585,12 @@ describe("TypedObject", () => {
         name: "Test Table",
         cols
       });
+      // Rows are stored as an object with numeric keys for Firebase compatibility
       expect(obj.data[itemId]).toEqual({
-        rows
+        rows: {
+          "0": ["Alice", 30],
+          "1": ["Bob", 25]
+        }
       });
     });
 
@@ -636,7 +640,7 @@ describe("TypedObject", () => {
       });
 
       const itemId = Object.keys(obj.metadata.items)[0];
-      expect(obj.data[itemId].rows).toEqual([]);
+      expect(obj.data[itemId].rows).toEqual({});
     });
 
     it("should add multiple data tables", () => {

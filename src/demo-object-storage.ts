@@ -8,12 +8,13 @@ import {
   ObjectWithId,
   MonitorCallback,
   DemonitorFunction,
-  AddOptions
+  AddOptions,
+  ObjectMetadataWithId
 } from './types';
 
 export class DemoObjectStorage implements IObjectStorage {
   private config: DemoObjectStorageConfig;
-  private objects: Map<string, ObjectWithId>;
+  private objects: Map<string, StoredObject>;
   private monitors: Map<string, MonitorCallback[]>;
 
   constructor(config: DemoObjectStorageConfig) {
@@ -25,66 +26,19 @@ export class DemoObjectStorage implements IObjectStorage {
     this.monitors = new Map();
   }
 
-  /**
-   * Lists metadata documents for objects owned by the current user
-   */
-  async listMine(): Promise<ObjectWithId[]> {
-    return Array.from(this.objects.values());
-  }
-
-  /**
-   * Lists metadata documents for objects linked to the current user
-   */
-  async listLinked(): Promise<ObjectWithId[]> {
-    // not applicable in demo storage
-    return [];
+  private getQuestionMetadata(): ObjectMetadataWithId[] {
+    // In demo mode, just return all objects since there are no other questions
+    // that can use this storage instance
+    return Array.from(this.objects.entries()).map(([id, obj]) => {
+      return { id, metadata: obj.metadata };
+    });
   }
 
   /**
    * Lists metadata documents for objects associated with specific question IDs
    */
-  async list(questionIds: string[]): Promise<ObjectWithId[]> {
-    // In demo mode, just return all objects
-    return Array.from(this.objects.values());
-  }
-
-  /**
-   * Monitors metadata documents for objects owned by the current user
-   * Invokes callback at start and on any change
-   * Returns a function to stop monitoring
-   */
-  monitorMine(callback: MonitorCallback): DemonitorFunction {
-    const key = 'mine';
-    if (!this.monitors.has(key)) {
-      this.monitors.set(key, []);
-    }
-    this.monitors.get(key)!.push(callback);
-
-    // Invoke callback immediately with current state
-    callback(Array.from(this.objects.values()));
-
-    return () => {
-      const callbacks = this.monitors.get(key);
-      if (callbacks) {
-        const index = callbacks.indexOf(callback);
-        if (index > -1) {
-          callbacks.splice(index, 1);
-        }
-      }
-    };
-  }
-
-  /**
-   * Monitors metadata documents for objects linked to the current user
-   * Invokes callback at start and on any change
-   * Returns a function to stop monitoring
-   */
-  monitorLinked(callback: MonitorCallback): DemonitorFunction {
-    // not applicable in demo storage
-    callback([]);
-    return () => {
-      // no-op
-    };
+  async list(questionId: string): Promise<ObjectMetadataWithId[]> {
+    return this.getQuestionMetadata();
   }
 
   /**
@@ -92,18 +46,17 @@ export class DemoObjectStorage implements IObjectStorage {
    * Invokes callback at start and on any change
    * Returns a function to stop monitoring
    */
-  monitor(questionIds: string[], callback: MonitorCallback): DemonitorFunction {
-    const key = `monitor-${questionIds.join(',')}`;
-    if (!this.monitors.has(key)) {
-      this.monitors.set(key, []);
+  monitor(questionId: string, callback: MonitorCallback): DemonitorFunction {
+    if (!this.monitors.has(questionId)) {
+      this.monitors.set(questionId, []);
     }
-    this.monitors.get(key)!.push(callback);
+    this.monitors.get(questionId)!.push(callback);
 
     // Invoke callback immediately with current state
-    callback(Array.from(this.objects.values()));
+    callback(this.getQuestionMetadata());
 
     return () => {
-      const callbacks = this.monitors.get(key);
+      const callbacks = this.monitors.get(questionId);
       if (callbacks) {
         const index = callbacks.indexOf(callback);
         if (index > -1) {
@@ -119,13 +72,7 @@ export class DemoObjectStorage implements IObjectStorage {
    */
   async add(object: StoredObject, options?: AddOptions): Promise<string> {
     const id = options?.id ?? nanoid();
-    const objectWithId: ObjectWithId = {
-      id,
-      metadata: object.metadata,
-      data: object.data
-    };
-
-    this.objects.set(id, objectWithId);
+    this.objects.set(id, object);
 
     // Notify all monitors
     this.notifyMonitors();
@@ -183,7 +130,7 @@ export class DemoObjectStorage implements IObjectStorage {
    * Notifies all active monitors of changes
    */
   private notifyMonitors(): void {
-    const allObjects = Array.from(this.objects.values());
+    const allObjects = this.getQuestionMetadata();
     this.monitors.forEach(callbacks => {
       callbacks.forEach(callback => callback(allObjects));
     });

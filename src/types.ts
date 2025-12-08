@@ -8,8 +8,8 @@ export interface AuthenticatedUser {
   jwt: string;
   contextId: string;
   platformId: string;
-  platformUserId: string;
   resourceLinkId: string;
+  platformUserId: string;
 }
 
 export interface AnonymousUser {
@@ -22,9 +22,10 @@ export type FirebaseObjectStorageUser = AuthenticatedUser | AnonymousUser;
 export interface FirebaseObjectStorageConfig {
   version: 1;
   type: "firebase";
-  app: any; // TODO: replace with Firebase App type
+  app: Object;
   root: string;
   user: FirebaseObjectStorageUser;
+  questionId: string;
 };
 
 export type ObjectStorageConfig = DemoObjectStorageConfig | FirebaseObjectStorageConfig;
@@ -34,12 +35,8 @@ export interface AddOptions {
 }
 
 export interface IObjectStorage {
-  listMine(): Promise<ObjectWithId[]>;
-  listLinked(): Promise<ObjectWithId[]>;
-  list(questionIds: string[]): Promise<ObjectWithId[]>;
-  monitorMine(callback: MonitorCallback): DemonitorFunction;
-  monitorLinked(callback: MonitorCallback): DemonitorFunction;
-  monitor(questionIds: string[], callback: MonitorCallback): DemonitorFunction;
+  list(questionOrRefId: string): Promise<ObjectMetadataWithId[]>;
+  monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction;
   add(object: StoredObject, options?: AddOptions): Promise<string>;
   read(objectId: string): Promise<StoredObject | undefined>;
   readMetadata(objectId: string): Promise<ObjectMetadata | undefined>;
@@ -60,10 +57,22 @@ export interface StoredObject {
   data: ObjectData;
 }
 
-export interface ObjectWithId extends StoredObject {
+export interface ObjectMetadataWithId {
   id: string;
+  metadata: ObjectMetadata;
 }
 
-export type MonitorCallback = (objects: ObjectWithId[]) => void;
+export interface ObjectDataWithId {
+  id: string;
+  data: ObjectData;
+}
+
+export interface ObjectWithId {
+  id: string;
+  metadata: ObjectMetadata;
+  data: ObjectData;
+}
+
+export type MonitorCallback = (objects: ObjectMetadataWithId[]) => void;
 
 export type DemonitorFunction = () => void;

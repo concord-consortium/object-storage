@@ -9,10 +9,10 @@ import {
   ObjectMetadata,
   ObjectData,
   StoredObject,
-  ObjectWithId,
   MonitorCallback,
   DemonitorFunction,
-  AddOptions
+  AddOptions,
+  ObjectMetadataWithId
 } from './types';
 
 export class FirebaseObjectStorage implements IObjectStorage {
@@ -25,7 +25,10 @@ export class FirebaseObjectStorage implements IObjectStorage {
     if (config.version !== 1) {
       throw new Error(`Unsupported config version: ${config.version}. Expected version 1.`);
     }
-    this.config = config;
+    this.config = {...config};
+
+    // ensure the question id is in the correct format
+    this.config.questionId = this.ensureIdIsQuestionId(this.config.questionId);
 
     this.app = firebase.initializeApp(this.config.app);
     this.app.firestore().settings({
@@ -53,15 +56,17 @@ export class FirebaseObjectStorage implements IObjectStorage {
   }
 
   private createDocument(contents: any): Partial<firebase.firestore.DocumentData> {
+    const { questionId } = this.config;
     if (this.config.user.type === "authenticated") {
       const {contextId, platformId, platformUserId, resourceLinkId} = this.config.user;
       return {
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
-        platform_id: platformId,
-        platform_user_id: platformUserId.toString(),
         context_id: contextId,
+        platform_id: platformId,
+        platform_user_id: platformUserId,
         resource_link_id: resourceLinkId,
         run_key: "",
+        question_id: questionId,
         ...contents
       };
     } else {
@@ -70,14 +75,15 @@ export class FirebaseObjectStorage implements IObjectStorage {
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
         run_key: runKey,
         platform_user_id: runKey,
+        question_id: questionId,
         ...contents
       };
     }
   }
 
-  private getPaths(objectId: string): {metadataPath: string, dataPath: string} {
-    const metadataPath = `${this.config.root}/object_store_metadata/${objectId}`;
-    const dataPath = `${this.config.root}/object_store_data/${objectId}`;
+  private getPaths(objectId?: string): {metadataPath: string, dataPath: string} {
+    const metadataPath = `${this.config.root}/object_store_metadata${objectId ? `/${objectId}` : ''}`;
+    const dataPath = `${this.config.root}/object_store_data${objectId ? `/${objectId}` : ''}`;
     return {metadataPath, dataPath};
   }
 
@@ -88,63 +94,63 @@ export class FirebaseObjectStorage implements IObjectStorage {
     return {metadataRef, dataRef};
   }
 
-  /**
-   * Lists metadata documents for objects owned by the current user
-   */
-  async listMine(): Promise<ObjectWithId[]> {
-    await this.ensureInitialized();
+  private getMetadataQuery(questionOrRefId: string): firebase.firestore.Query {
+    const questionId = this.ensureIdIsQuestionId(questionOrRefId);
 
-    // TODO: Implement Firebase query for user's own objects
-    return [];
+    const { metadataPath } = this.getPaths();
+    let query: firebase.firestore.Query = this.app.firestore().collection(metadataPath)
+      .where("question_id", "==", questionId);
+
+    if (this.config.user.type === "authenticated") {    // logged in user
+      const { contextId, platformId, resourceLinkId, platformUserId } = this.config.user;
+      query = query
+        .where("context_id", "==", contextId)
+        .where("platform_id", "==", platformId)
+        .where("platform_user_id", "==", platformUserId.toString())
+        .where("resource_link_id", "==", resourceLinkId);
+    } else {
+      query = query.where("run_key", "==", this.config.user.runKey);
+    }
+
+    query = query.orderBy("created_at", "asc");
+
+    return query;
   }
 
   /**
-   * Lists metadata documents for objects linked to the current user
+   * Ensures the provided ID is in question ID format as opposed to reference ID format
+   *
+   * eg: "404-MWInteractive" transforms to "mw_interactive_404"
+   *
+   * @param questionOrRefId
+   * @returns
    */
-  async listLinked(): Promise<ObjectWithId[]> {
-    await this.ensureInitialized();
-
-    // TODO: Implement Firebase query for linked objects
-    return [];
+  private ensureIdIsQuestionId(questionOrRefId: string) {
+    const refIdRegEx = /(\d*)-(\D*)/g;
+    const parsed = refIdRegEx.exec(questionOrRefId);
+    if (parsed?.length) {
+      const [ , embeddableId, embeddableType] = parsed;
+      const snakeCased = embeddableType.replace(/(?!^)([A-Z])/g, "_$1").toLowerCase();
+      return `${snakeCased}_${embeddableId}`;
+    }
+    return questionOrRefId;
   }
 
   /**
    * Lists metadata documents for objects associated with specific question IDs
    */
-  async list(questionIds: string[]): Promise<ObjectWithId[]> {
+  async list(questionOrRefId: string): Promise<ObjectMetadataWithId[]> {
     await this.ensureInitialized();
-    // TODO: Implement Firebase query for objects by question IDs
-    return [];
-  }
 
-  /**
-   * Monitors metadata documents for objects owned by the current user
-   * Invokes callback at start and on any change
-   * Returns a function to stop monitoring
-   */
-  monitorMine(callback: MonitorCallback): DemonitorFunction {
-    // await this.ensureInitialized();
+    const query = this.getMetadataQuery(questionOrRefId);
+    const querySnapshot = await query.get();
 
-    // TODO: Implement Firebase realtime listener for user's own objects
-    callback([]);
-    return () => {
-      // TODO: Implement cleanup
-    };
-  }
+    const results: ObjectMetadataWithId[] = [];
+    querySnapshot.forEach(doc => {
+      results.push({ id: doc.id, metadata: doc.data().metadata });
+    });
 
-  /**
-   * Monitors metadata documents for objects linked to the current user
-   * Invokes callback at start and on any change
-   * Returns a function to stop monitoring
-   */
-  monitorLinked(callback: MonitorCallback): DemonitorFunction {
-    // await this.ensureInitialized();
-
-    // TODO: Implement Firebase realtime listener for linked objects
-    callback([]);
-    return () => {
-      // TODO: Implement cleanup
-    };
+    return results;
   }
 
   /**
@@ -152,13 +158,21 @@ export class FirebaseObjectStorage implements IObjectStorage {
    * Invokes callback at start and on any change
    * Returns a function to stop monitoring
    */
-  monitor(questionIds: string[], callback: MonitorCallback): DemonitorFunction {
+  monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction {
     // await this.ensureInitialized();
 
-    // TODO: Implement Firebase realtime listener for objects by question IDs
-    callback([]);
+    const query = this.getMetadataQuery(questionOrRefId);
+
+    const unsub = query.onSnapshot(snapshot => {
+      const results: ObjectMetadataWithId[] = [];
+      snapshot.forEach(doc => {
+        results.push({ id: doc.id, metadata: doc.data().metadata });
+      });
+      callback(results);
+    });
+
     return () => {
-      // TODO: Implement cleanup
+      unsub();
     };
   }
 
@@ -190,12 +204,17 @@ export class FirebaseObjectStorage implements IObjectStorage {
   async read(objectId: string): Promise<StoredObject | undefined> {
     await this.ensureInitialized();
 
-    // TODO: Read metadata document from Firebase
-    // TODO: Read data document from Firebase
-    return {
-      metadata: {},
-      data: {}
-    };
+    const metadata = await this.readMetadata(objectId);
+    if (!metadata) {
+      return undefined;
+    }
+
+    const data = await this.readData(objectId);
+    if (!data) {
+      return undefined;
+    }
+
+    return { metadata, data };
   }
 
   /**
@@ -204,8 +223,14 @@ export class FirebaseObjectStorage implements IObjectStorage {
   async readMetadata(objectId: string): Promise<ObjectMetadata | undefined> {
     await this.ensureInitialized();
 
-    // TODO: Read metadata document from Firebase
-    return {};
+    const { metadataRef } = this.getRefs(objectId);
+    const metadataSnapshot = await metadataRef.get();
+
+    if (!metadataSnapshot.exists) {
+      return undefined;
+    }
+
+    return metadataSnapshot.data()?.metadata ?? {};
   }
 
   /**
@@ -214,8 +239,14 @@ export class FirebaseObjectStorage implements IObjectStorage {
   async readData(objectId: string): Promise<ObjectData | undefined> {
     await this.ensureInitialized();
 
-    // TODO: Read data document from Firebase
-    return {};
+    const { dataRef } = this.getRefs(objectId);
+    const dataSnapshot = await dataRef.get();
+
+    if (!dataSnapshot.exists) {
+      return undefined;
+    }
+
+    return dataSnapshot.data()?.data ?? {};
   }
 
   /**

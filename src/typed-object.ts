@@ -97,7 +97,7 @@ export class TypedObject implements StoredObject {
     return TypedObject.IsSupportedTypedObjectMetadata(storedObject.metadata);
   }
 
-  static IsSupportedTypedObjectMetadata(storedObjectMetadata?: StoredObject["metadata"]): boolean {
+  static IsSupportedTypedObjectMetadata(storedObjectMetadata?: StoredObject["metadata"]): storedObjectMetadata is TypedMetadata {
     const metadata = storedObjectMetadata as TypedMetadata|undefined;
     return metadata !== undefined && metadata.type === "typed" && typeof metadata.version === "number" && metadata.version == 1;
   }
