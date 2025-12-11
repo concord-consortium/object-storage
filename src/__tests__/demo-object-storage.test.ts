@@ -188,7 +188,38 @@ describe('DemoObjectStorage', () => {
       const data = await storage.readData(result.id);
 
       expect(data?.['table'].rows).toBeDefined();
-      expect(Object.keys(data?.['table'].rows || {})).toHaveLength(3);
+      expect(data?.['table'].rows).toHaveLength(3);
+    });
+  });
+
+  describe('readDataItem', () => {
+    it('should read single data item with readDataItem()', async () => {
+      const object = new StoredObject();
+      object.addText({ id: 'note', name: 'note', text: 'My note content' });
+      object.addImage({ id: 'photo', name: 'photo', url: 'https://example.com/photo.jpg' });
+
+      const result = await storage.add(object);
+      const noteData = await storage.readDataItem(result.id, 'note');
+      const photoData = await storage.readDataItem(result.id, 'photo');
+
+      expect(noteData).toEqual({ text: 'My note content' });
+      expect(photoData).toEqual({ url: 'https://example.com/photo.jpg' });
+    });
+
+    it('should return undefined for non-existent item', async () => {
+      const object = new StoredObject();
+      object.addText({ id: 'note', name: 'note', text: 'content' });
+
+      const result = await storage.add(object);
+      const itemData = await storage.readDataItem(result.id, 'non-existent-item');
+
+      expect(itemData).toBeUndefined();
+    });
+
+    it('should return undefined for non-existent object', async () => {
+      const itemData = await storage.readDataItem('non-existent-object', 'some-item');
+
+      expect(itemData).toBeUndefined();
     });
   });
 

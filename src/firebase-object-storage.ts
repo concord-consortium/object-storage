@@ -91,6 +91,10 @@ export class FirebaseObjectStorage implements IObjectStorage {
     return {metadataRef, dataRef};
   }
 
+  private getItemDataPath(objectId: string, itemId: string): string {
+    return `${this.config.root}/object_store_data/${objectId}-${itemId}`;
+  }
+
   private getMetadataQuery(questionOrRefId: string): firebase.firestore.Query {
     const questionId = this.ensureIdIsQuestionId(questionOrRefId);
 
@@ -181,15 +185,26 @@ export class FirebaseObjectStorage implements IObjectStorage {
     await this.ensureInitialized();
 
     const newObjectId = object.id;
-    const { data, metadata } = object;
-    const { metadataRef, dataRef } = this.getRefs(newObjectId);
+    const { metadata } = object;
+    const { metadataRef } = this.getRefs(newObjectId);
 
-    const dataDoc = this.createDocument({ data });
     const metadataDoc = this.createDocument({ metadata });
 
     const batch = this.app.firestore().batch();
-    batch.set(dataRef, dataDoc);
     batch.set(metadataRef, metadataDoc);
+
+    // Write each item as a separate document
+    for (const itemId in object.data) {
+      const itemPath = this.getItemDataPath(newObjectId, itemId);
+      const itemRef = this.app.firestore().doc(itemPath);
+      const itemDoc = this.createDocument({
+        objectId: newObjectId,
+        itemId: itemId,
+        itemData: JSON.stringify(object.data[itemId])
+      });
+      batch.set(itemRef, itemDoc);
+    }
+
     await batch.commit();
 
     return object;
@@ -236,14 +251,45 @@ export class FirebaseObjectStorage implements IObjectStorage {
   async readData(objectId: string): Promise<StoredObjectData | undefined> {
     await this.ensureInitialized();
 
-    const { dataRef } = this.getRefs(objectId);
-    const dataSnapshot = await dataRef.get();
+    const dataPath = `${this.config.root}/object_store_data`;
+    const query = this.app.firestore().collection(dataPath)
+      .where("objectId", "==", objectId);
 
-    if (!dataSnapshot.exists) {
+    const querySnapshot = await query.get();
+
+    if (querySnapshot.empty) {
       return undefined;
     }
 
-    return dataSnapshot.data()?.data as StoredObjectData | undefined;
+    const data: StoredObjectData = {};
+    querySnapshot.forEach(doc => {
+      const docData = doc.data();
+      const itemId = docData.itemId;
+      const itemDataString = docData.itemData;
+      if (itemId && itemDataString) {
+        data[itemId] = JSON.parse(itemDataString);
+      }
+    });
+
+    return data;
+  }
+
+  /**
+   * Reads a single data item for an object
+   */
+  async readDataItem(objectId: string, itemId: string): Promise<any | undefined> {
+    await this.ensureInitialized();
+
+    const itemPath = this.getItemDataPath(objectId, itemId);
+    const itemRef = this.app.firestore().doc(itemPath);
+    const itemSnapshot = await itemRef.get();
+
+    if (!itemSnapshot.exists) {
+      return undefined;
+    }
+
+    const itemDataString = itemSnapshot.data()?.itemData;
+    return itemDataString ? JSON.parse(itemDataString) : undefined;
   }
 
   /**

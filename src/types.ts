@@ -38,6 +38,7 @@ export interface IObjectStorage {
   read(objectId: string): Promise<StoredObject | undefined>;
   readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined>;
   readData(objectId: string): Promise<StoredObjectData | undefined>;
+  readDataItem(objectId: string, itemId: string): Promise<any | undefined>;
   genId(): string;
 }
 

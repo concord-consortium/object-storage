@@ -149,12 +149,9 @@ describe("StoredObject", () => {
         name: "Test Table",
         cols
       });
-      // Rows are stored as an object with numeric keys for Firebase compatibility
+      // Rows are stored as an array
       expect(obj.data[itemId]).toEqual({
-        rows: {
-          "0": ["Alice", 30],
-          "1": ["Bob", 25]
-        }
+        rows: [["Alice", 30], ["Bob", 25]]
       });
     });
 
@@ -204,7 +201,7 @@ describe("StoredObject", () => {
       });
 
       const itemId = Object.keys(obj.metadata.items)[0];
-      expect(obj.data[itemId].rows).toEqual({});
+      expect(obj.data[itemId].rows).toEqual([]);
     });
 
     it("should add multiple data tables", () => {

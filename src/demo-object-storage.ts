@@ -110,6 +110,18 @@ export class DemoObjectStorage implements IObjectStorage {
   }
 
   /**
+   * Reads a single data item for an object
+   * Returns undefined if the object or item is not found
+   */
+  async readDataItem(objectId: string, itemId: string): Promise<any | undefined> {
+    const obj = this.objects.get(objectId);
+    if (!obj) {
+      return undefined;
+    }
+    return obj.data[itemId];
+  }
+
+  /**
    * Generates a new unique ID using nanoid
    */
   genId(): string {

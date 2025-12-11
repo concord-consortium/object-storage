@@ -145,14 +145,8 @@ export class StoredObject {
       this.metadata.items[id].description = options.description;
     }
 
-    // firebase does not support nested arrays well, so we store rows as an object with numeric keys
-    const rowsObj: Record<string, any[]> = {};
-    options.rows.forEach((row, index) => {
-      rowsObj[index.toString()] = row;
-    });
-
     this.data[id] = {
-      rows: rowsObj
+      rows: options.rows
     };
   }
 
