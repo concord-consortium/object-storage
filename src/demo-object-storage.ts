@@ -5,7 +5,6 @@ import {
   StoredObjectWithId,
   MonitorCallback,
   DemonitorFunction,
-  AddOptions,
   StoredObjectMetadataWithId
 } from './types';
 import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
@@ -66,10 +65,10 @@ export class DemoObjectStorage implements IObjectStorage {
 
   /**
    * Adds both metadata and data documents for a new object
-   * Returns the generated object ID (nanoid) or the provided ID if specified in options
+   * Returns the object ID from the StoredObject
    */
-  async add(object: StoredObject, options?: AddOptions): Promise<string> {
-    const id = options?.id ?? object.id ?? nanoid();
+  async add(object: StoredObject): Promise<string> {
+    const id = object.id;
     this.objects.set(id, object);
 
     // Notify all monitors

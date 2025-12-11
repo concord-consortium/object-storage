@@ -1,5 +1,5 @@
 import { DemoObjectStorage } from '../demo-object-storage';
-import { ObjectMetadataWithId, MonitorCallback } from '../types';
+import { StoredObjectMetadataWithId, MonitorCallback } from '../types';
 import { StoredObject } from '../stored-object';
 
 describe('DemoObjectStorage', () => {
@@ -64,17 +64,17 @@ describe('DemoObjectStorage', () => {
       expect(retrieved?.metadata.items['photo']).toBeDefined();
     });
 
-    it('should use provided ID when specified in options', async () => {
-      const object = new StoredObject();
-      object.addText({ name: 'test', text: 'content' });
+    it('should use object.id from the stored object', async () => {
       const customId = 'custom-id-123';
+      const object = new StoredObject({ id: customId });
+      object.addText({ name: 'test', text: 'content' });
 
-      const id = await storage.add(object, { id: customId });
+      const id = await storage.add(object);
 
       expect(id).toBe(customId);
     });
 
-    it('should use object.id when no options ID is provided', async () => {
+    it('should use object.id when specified in constructor', async () => {
       const object = new StoredObject({ id: 'object-generated-id' });
       object.addText({ name: 'test', text: 'content' });
 
@@ -241,7 +241,7 @@ describe('DemoObjectStorage', () => {
       object.addText({ name: 'note', text: 'content' });
       const id = await storage.add(object);
 
-      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const callback = jest.fn<void, [StoredObjectMetadataWithId[]]>();
       storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -259,7 +259,7 @@ describe('DemoObjectStorage', () => {
     });
 
     it('should invoke callback when new objects are added', async () => {
-      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const callback = jest.fn<void, [StoredObjectMetadataWithId[]]>();
       storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -272,7 +272,7 @@ describe('DemoObjectStorage', () => {
     });
 
     it('should stop monitoring when demonitor function is called', async () => {
-      const callback = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const callback = jest.fn<void, [StoredObjectMetadataWithId[]]>();
       const demonitor = storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -287,8 +287,8 @@ describe('DemoObjectStorage', () => {
     });
 
     it('should notify all monitors when objects are added', async () => {
-      const callback1 = jest.fn<void, [ObjectMetadataWithId[]]>();
-      const callback2 = jest.fn<void, [ObjectMetadataWithId[]]>();
+      const callback1 = jest.fn<void, [StoredObjectMetadataWithId[]]>();
+      const callback2 = jest.fn<void, [StoredObjectMetadataWithId[]]>();
 
       storage.monitor('q1', callback1);
       storage.monitor('q2', callback2);
@@ -323,10 +323,10 @@ describe('DemoObjectStorage', () => {
 
     it('should generate IDs that can be used with add method', async () => {
       const customId = storage.genId();
-      const object = new StoredObject();
+      const object = new StoredObject({ id: customId });
       object.addText({ name: 'test', text: 'content' });
 
-      const id = await storage.add(object, { id: customId });
+      const id = await storage.add(object);
       const retrieved = await storage.read(id);
 
       expect(id).toBe(customId);

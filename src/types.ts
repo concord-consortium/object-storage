@@ -31,14 +31,10 @@ export interface FirebaseObjectStorageConfig {
 
 export type ObjectStorageConfig = DemoObjectStorageConfig | FirebaseObjectStorageConfig;
 
-export interface AddOptions {
-  id?: string;
-}
-
 export interface IObjectStorage {
   list(questionOrRefId: string): Promise<StoredObjectMetadataWithId[]>;
   monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction;
-  add(object: StoredObject, options?: AddOptions): Promise<string>;
+  add(object: StoredObject): Promise<string>;
   read(objectId: string): Promise<StoredObject | undefined>;
   readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined>;
   readData(objectId: string): Promise<StoredObjectData | undefined>;
