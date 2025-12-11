@@ -8,11 +8,8 @@ export {
   DemoObjectStorageConfig,
   FirebaseObjectStorageUser,
   FirebaseObjectStorageConfig,
-  ObjectMetadata,
-  ObjectData,
-  StoredObject,
   ObjectWithId,
   MonitorCallback,
   DemonitorFunction
 } from './types';
-export * from './typed-object';
+export * from './stored-object';

@@ -1,5 +1,4 @@
 import { nanoid } from "nanoid";
-import { StoredObject } from "./types";
 
 export type AddImageOptions = {
   id?: string;
@@ -20,7 +19,7 @@ export type AddDataTableOptions = {
   subType?: string;
 }
 
-export type AddTypedTextOptions = {
+export type AddTextOptions = {
   id?: string;
   name: string;
   text: string;
@@ -28,7 +27,7 @@ export type AddTypedTextOptions = {
   subType?: string;
 }
 
-export type AddTypedObjectOptions = {
+export type AddStoredObjectOptions = {
   id?: string;
   name: string;
   data: Record<string, any>;
@@ -36,48 +35,48 @@ export type AddTypedObjectOptions = {
   subType?: string;
 }
 
-export type TypedImageMetadata = {
+export type StoredImageMetadata = {
   type: "image";
 } & Omit<AddImageOptions, "id"|"url">;
 
-export type TypedDataTableMetadata = {
+export type StoredObjectDataTableMetadata = {
   type: "dataTable";
 } & Omit<AddDataTableOptions, "id"|"rows">;
 
-export type TypedTextMetadata = {
+export type StoredTextMetadata = {
   type: "text";
-} & Omit<AddTypedTextOptions, "id"|"text">;
+} & Omit<AddTextOptions, "id"|"text">;
 
-export type TypedObjectMetadata = {
+export type StoredObjectItemMetadata = {
   type: "object";
   keys: string[];
-} & Omit<AddTypedObjectOptions, "id"|"data">;
+} & Omit<AddStoredObjectOptions, "id"|"data">;
 
-export type TypedMetadataItem = TypedImageMetadata | TypedDataTableMetadata | TypedTextMetadata | TypedObjectMetadata;
-export type TypedMetadataItems = Record<string, TypedMetadataItem>;
+export type StoredMetadataItem = StoredImageMetadata | StoredObjectDataTableMetadata | StoredTextMetadata | StoredObjectItemMetadata;
+export type StoredMetadataItems = Record<string, StoredMetadataItem>;
 
-export type TypedMetadata = {
+export type StoredObjectMetadata = {
   version: 1;
   type: "typed";
-  items: TypedMetadataItems;
+  items: StoredMetadataItems;
   name?: string;
   description?: string;
 }
 
-export type TypedData = Record<string, any>;
+export type StoredObjectData = Record<string, any>;
 
-export type TypedObjectOptions = {
+export type StoredObjectOptions = {
   id?: string;
   name?: string;
   description?: string;
 }
 
-export class TypedObject implements StoredObject {
+export class StoredObject {
   id: string;
-  metadata: TypedMetadata;
-  data: TypedData;
+  metadata: StoredObjectMetadata;
+  data: StoredObjectData;
 
-  constructor(options?: TypedObjectOptions) {
+  constructor(options?: StoredObjectOptions) {
     this.id = options?.id || nanoid();
     this.metadata = {
       version: 1,
@@ -93,23 +92,10 @@ export class TypedObject implements StoredObject {
     this.data = {};
   }
 
-  static IsSupportedTypedObject(storedObject: StoredObject): boolean {
-    return TypedObject.IsSupportedTypedObjectMetadata(storedObject.metadata);
-  }
-
-  static IsSupportedTypedObjectMetadata(storedObjectMetadata?: StoredObject["metadata"]): storedObjectMetadata is TypedMetadata {
-    const metadata = storedObjectMetadata as TypedMetadata|undefined;
-    return metadata !== undefined && metadata.type === "typed" && typeof metadata.version === "number" && metadata.version == 1;
-  }
-
-  static FromStoredObject(id: string, storedObject: StoredObject): TypedObject {
-    if (!TypedObject.IsSupportedTypedObject(storedObject)) {
-      throw new Error("Invalid or unsupported TypedObject");
-    }
-
-    const typedObject = new TypedObject({id});
-    typedObject.metadata = storedObject.metadata as TypedMetadata;
-    typedObject.data = storedObject.data;
+  static FromParts(id: string, metadata: StoredObjectMetadata, data: StoredObjectData): StoredObject {
+    const typedObject = new StoredObject({id});
+    typedObject.metadata = metadata;
+    typedObject.data = data;
     return typedObject;
   }
 
@@ -162,7 +148,7 @@ export class TypedObject implements StoredObject {
     };
   }
 
-  addText(options: AddTypedTextOptions): void {
+  addText(options: AddTextOptions): void {
     const id = options.id || nanoid();
     this.metadata.items[id] = {
       type: "text",
@@ -180,7 +166,7 @@ export class TypedObject implements StoredObject {
     };
   }
 
-  addObject(options: AddTypedObjectOptions): void {
+  addObject(options: AddStoredObjectOptions): void {
     const id = options.id || nanoid();
     this.metadata.items[id] = {
       type: "object",

@@ -34,43 +34,33 @@ export interface AddOptions {
   id?: string;
 }
 
+// Import StoredObject types
+import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
+
 export interface IObjectStorage {
   list(questionOrRefId: string): Promise<ObjectMetadataWithId[]>;
   monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction;
   add(object: StoredObject, options?: AddOptions): Promise<string>;
   read(objectId: string): Promise<StoredObject | undefined>;
-  readMetadata(objectId: string): Promise<ObjectMetadata | undefined>;
-  readData(objectId: string): Promise<ObjectData | undefined>;
+  readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined>;
+  readData(objectId: string): Promise<StoredObjectData | undefined>;
   genId(): string;
-}
-
-export interface ObjectMetadata {
-  [key: string]: any;
-}
-
-export interface ObjectData {
-  [key: string]: any;
-}
-
-export interface StoredObject {
-  metadata: ObjectMetadata;
-  data: ObjectData;
 }
 
 export interface ObjectMetadataWithId {
   id: string;
-  metadata: ObjectMetadata;
+  metadata: StoredObjectMetadata;
 }
 
 export interface ObjectDataWithId {
   id: string;
-  data: ObjectData;
+  data: StoredObjectData;
 }
 
 export interface ObjectWithId {
   id: string;
-  metadata: ObjectMetadata;
-  data: ObjectData;
+  metadata: StoredObjectMetadata;
+  data: StoredObjectData;
 }
 
 export type MonitorCallback = (objects: ObjectMetadataWithId[]) => void;

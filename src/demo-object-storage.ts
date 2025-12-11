@@ -2,15 +2,13 @@ import { nanoid } from 'nanoid';
 import {
   DemoObjectStorageConfig,
   IObjectStorage,
-  ObjectMetadata,
-  ObjectData,
-  StoredObject,
   ObjectWithId,
   MonitorCallback,
   DemonitorFunction,
   AddOptions,
   ObjectMetadataWithId
 } from './types';
+import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
 
 export class DemoObjectStorage implements IObjectStorage {
   private config: DemoObjectStorageConfig;
@@ -71,7 +69,7 @@ export class DemoObjectStorage implements IObjectStorage {
    * Returns the generated object ID (nanoid) or the provided ID if specified in options
    */
   async add(object: StoredObject, options?: AddOptions): Promise<string> {
-    const id = options?.id ?? nanoid();
+    const id = options?.id ?? object.id ?? nanoid();
     this.objects.set(id, object);
 
     // Notify all monitors
@@ -85,21 +83,14 @@ export class DemoObjectStorage implements IObjectStorage {
    * Returns undefined if the object is not found
    */
   async read(objectId: string): Promise<StoredObject | undefined> {
-    const obj = this.objects.get(objectId);
-    if (!obj) {
-      return undefined;
-    }
-    return {
-      metadata: obj.metadata,
-      data: obj.data
-    };
+    return this.objects.get(objectId);
   }
 
   /**
    * Reads only the metadata document for an object
    * Returns undefined if the object is not found
    */
-  async readMetadata(objectId: string): Promise<ObjectMetadata | undefined> {
+  async readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined> {
     const obj = this.objects.get(objectId);
     if (!obj) {
       return undefined;
@@ -111,7 +102,7 @@ export class DemoObjectStorage implements IObjectStorage {
    * Reads only the data document for an object
    * Returns undefined if the object is not found
    */
-  async readData(objectId: string): Promise<ObjectData | undefined> {
+  async readData(objectId: string): Promise<StoredObjectData | undefined> {
     const obj = this.objects.get(objectId);
     if (!obj) {
       return undefined;

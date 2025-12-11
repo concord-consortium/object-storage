@@ -6,14 +6,12 @@ import "firebase/compat/firestore";
 import {
   FirebaseObjectStorageConfig,
   IObjectStorage,
-  ObjectMetadata,
-  ObjectData,
-  StoredObject,
   MonitorCallback,
   DemonitorFunction,
   AddOptions,
   ObjectMetadataWithId
 } from './types';
+import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
 
 export class FirebaseObjectStorage implements IObjectStorage {
   private config: FirebaseObjectStorageConfig;
@@ -183,7 +181,7 @@ export class FirebaseObjectStorage implements IObjectStorage {
   async add(object: StoredObject, options?: AddOptions): Promise<string> {
     await this.ensureInitialized();
 
-    const newObjectId = options?.id ?? nanoid();
+    const newObjectId = options?.id ?? object.id ?? nanoid();
     const { data, metadata } = object;
     const { metadataRef, dataRef } = this.getRefs(newObjectId);
 
@@ -214,13 +212,13 @@ export class FirebaseObjectStorage implements IObjectStorage {
       return undefined;
     }
 
-    return { metadata, data };
+    return StoredObject.FromParts(objectId, metadata, data);
   }
 
   /**
    * Reads only the metadata document for an object
    */
-  async readMetadata(objectId: string): Promise<ObjectMetadata | undefined> {
+  async readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined> {
     await this.ensureInitialized();
 
     const { metadataRef } = this.getRefs(objectId);
@@ -230,13 +228,13 @@ export class FirebaseObjectStorage implements IObjectStorage {
       return undefined;
     }
 
-    return metadataSnapshot.data()?.metadata ?? {};
+    return metadataSnapshot.data()?.metadata as StoredObjectMetadata | undefined;
   }
 
   /**
    * Reads only the data document for an object
    */
-  async readData(objectId: string): Promise<ObjectData | undefined> {
+  async readData(objectId: string): Promise<StoredObjectData | undefined> {
     await this.ensureInitialized();
 
     const { dataRef } = this.getRefs(objectId);
@@ -246,7 +244,7 @@ export class FirebaseObjectStorage implements IObjectStorage {
       return undefined;
     }
 
-    return dataSnapshot.data()?.data ?? {};
+    return dataSnapshot.data()?.data as StoredObjectData | undefined;
   }
 
   /**
