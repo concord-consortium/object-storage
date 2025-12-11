@@ -32,11 +32,11 @@ describe('DemoObjectStorage', () => {
       const object = new StoredObject({ name: 'Test Object' });
       object.addText({ name: 'note', text: 'Hello world' });
 
-      const id = await storage.add(object);
+      const result = await storage.add(object);
 
-      expect(id).toBeDefined();
-      expect(typeof id).toBe('string');
-      expect(id.length).toBeGreaterThan(0);
+      expect(result.id).toBeDefined();
+      expect(typeof result.id).toBe('string');
+      expect(result.id.length).toBeGreaterThan(0);
     });
 
     it('should generate unique IDs for multiple objects', async () => {
@@ -46,18 +46,18 @@ describe('DemoObjectStorage', () => {
       const object2 = new StoredObject({ name: 'Object 2' });
       object2.addText({ name: 'text2', text: 'Second' });
 
-      const id1 = await storage.add(object1);
-      const id2 = await storage.add(object2);
+      const result1 = await storage.add(object1);
+      const result2 = await storage.add(object2);
 
-      expect(id1).not.toBe(id2);
+      expect(result1.id).not.toBe(result2.id);
     });
 
     it('should store the object so it can be retrieved', async () => {
       const object = new StoredObject({ name: 'Test' });
       object.addImage({ id: 'photo', name: 'photo', url: 'https://example.com/photo.jpg', width: 800, height: 600 });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved).toBeDefined();
       expect(retrieved?.metadata.name).toBe('Test');
@@ -69,18 +69,18 @@ describe('DemoObjectStorage', () => {
       const object = new StoredObject({ id: customId });
       object.addText({ name: 'test', text: 'content' });
 
-      const id = await storage.add(object);
+      const result = await storage.add(object);
 
-      expect(id).toBe(customId);
+      expect(result.id).toBe(customId);
     });
 
     it('should use object.id when specified in constructor', async () => {
       const object = new StoredObject({ id: 'object-generated-id' });
       object.addText({ name: 'test', text: 'content' });
 
-      const id = await storage.add(object);
+      const result = await storage.add(object);
 
-      expect(id).toBe('object-generated-id');
+      expect(result.id).toBe('object-generated-id');
     });
   });
 
@@ -89,11 +89,11 @@ describe('DemoObjectStorage', () => {
       const object = new StoredObject({ name: 'Test Object', description: 'A test' });
       object.addText({ name: 'note', text: 'Test content' });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved).toBeInstanceOf(StoredObject);
-      expect(retrieved?.id).toBe(id);
+      expect(retrieved?.id).toBe(result.id);
       expect(retrieved?.metadata.name).toBe('Test Object');
       expect(retrieved?.metadata.description).toBe('A test');
     });
@@ -110,8 +110,8 @@ describe('DemoObjectStorage', () => {
       object.addText({ id: 'caption', name: 'caption', text: 'A beautiful photo' });
       object.addDataTable({ id: 'data', name: 'data', cols: ['A', 'B'], rows: [[1, 2], [3, 4]] });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(Object.keys(retrieved?.metadata.items || {})).toHaveLength(3);
       expect(retrieved?.metadata.items['photo']).toBeDefined();
@@ -125,8 +125,8 @@ describe('DemoObjectStorage', () => {
       const object = new StoredObject({ name: 'Test', description: 'Description', type: 'simulation-recording', subType: 'test-subtype' });
       object.addText({ name: 'text', text: 'content' });
 
-      const id = await storage.add(object);
-      const metadata = await storage.readMetadata(id);
+      const result = await storage.add(object);
+      const metadata = await storage.readMetadata(result.id);
 
       expect(metadata).toBeDefined();
       expect(metadata?.version).toBe(1);
@@ -147,8 +147,8 @@ describe('DemoObjectStorage', () => {
       object.addImage({ name: 'img1', url: 'url1', width: 100, height: 100 });
       object.addImage({ name: 'img2', url: 'url2', width: 200, height: 200 });
 
-      const id = await storage.add(object);
-      const metadata = await storage.readMetadata(id);
+      const result = await storage.add(object);
+      const metadata = await storage.readMetadata(result.id);
 
       expect(metadata?.items).toBeDefined();
       expect(Object.keys(metadata?.items || {})).toHaveLength(2);
@@ -161,8 +161,8 @@ describe('DemoObjectStorage', () => {
       object.addText({ id: 'note', name: 'note', text: 'My note content' });
       object.addImage({ id: 'photo', name: 'photo', url: 'https://example.com/photo.jpg' });
 
-      const id = await storage.add(object);
-      const data = await storage.readData(id);
+      const result = await storage.add(object);
+      const data = await storage.readData(result.id);
 
       expect(data).toBeDefined();
       expect(data?.['note']).toEqual({ text: 'My note content' });
@@ -184,8 +184,8 @@ describe('DemoObjectStorage', () => {
         rows: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
       });
 
-      const id = await storage.add(object);
-      const data = await storage.readData(id);
+      const result = await storage.add(object);
+      const data = await storage.readData(result.id);
 
       expect(data?.['table'].rows).toBeDefined();
       expect(Object.keys(data?.['table'].rows || {})).toHaveLength(3);
@@ -206,14 +206,14 @@ describe('DemoObjectStorage', () => {
       const object2 = new StoredObject({ name: 'Object 2' });
       object2.addText({ name: 'text', text: 'Second' });
 
-      const id1 = await storage.add(object1);
-      const id2 = await storage.add(object2);
+      const result1 = await storage.add(object1);
+      const result2 = await storage.add(object2);
 
       const result = await storage.list('q1');
 
       expect(result).toHaveLength(2);
-      expect(result.map(r => r.id)).toContain(id1);
-      expect(result.map(r => r.id)).toContain(id2);
+      expect(result.map(r => r.id)).toContain(result1.id);
+      expect(result.map(r => r.id)).toContain(result2.id);
       expect(result[0].metadata.name).toBeDefined();
     });
 
@@ -239,7 +239,7 @@ describe('DemoObjectStorage', () => {
     it('should invoke callback immediately with current state', async () => {
       const object = new StoredObject({ name: 'Test' });
       object.addText({ name: 'note', text: 'content' });
-      const id = await storage.add(object);
+      const result = await storage.add(object);
 
       const callback = jest.fn<void, [StoredObjectMetadataWithId[]]>();
       storage.monitor('q1', callback);
@@ -248,7 +248,7 @@ describe('DemoObjectStorage', () => {
       expect(callback).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            id,
+            id: result.id,
             metadata: expect.objectContaining({
               version: 1,
               type: 'untyped'
@@ -326,10 +326,10 @@ describe('DemoObjectStorage', () => {
       const object = new StoredObject({ id: customId });
       object.addText({ name: 'test', text: 'content' });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
-      expect(id).toBe(customId);
+      expect(result.id).toBe(customId);
       expect(retrieved).toBeDefined();
     });
   });
@@ -353,8 +353,8 @@ describe('DemoObjectStorage', () => {
         height: 600
       });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved?.metadata.items['photo1']).toEqual({
         type: 'image',
@@ -382,8 +382,8 @@ describe('DemoObjectStorage', () => {
         description: 'Trial results'
       });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved?.metadata.items['results']).toEqual({
         type: 'dataTable',
@@ -404,8 +404,8 @@ describe('DemoObjectStorage', () => {
         subType: 'markdown'
       });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved?.metadata.items['summary']).toEqual({
         type: 'text',
@@ -432,8 +432,8 @@ describe('DemoObjectStorage', () => {
         description: 'User configuration'
       });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved?.metadata.items['config']).toEqual({
         type: 'object',
@@ -462,8 +462,8 @@ describe('DemoObjectStorage', () => {
       });
       object.addObject({ id: 'metadata', name: 'metadata', data: { author: 'John Doe', date: '2024-12-31' } });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(Object.keys(retrieved?.metadata.items || {})).toHaveLength(4);
       expect(retrieved?.metadata.items['title']?.type).toBe('text');
@@ -475,8 +475,8 @@ describe('DemoObjectStorage', () => {
     it('should handle empty StoredObjects', async () => {
       const object = new StoredObject({ name: 'Empty' });
 
-      const id = await storage.add(object);
-      const retrieved = await storage.read(id);
+      const result = await storage.add(object);
+      const retrieved = await storage.read(result.id);
 
       expect(retrieved).toBeDefined();
       expect(retrieved?.metadata.version).toBe(1);

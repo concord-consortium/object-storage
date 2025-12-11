@@ -65,16 +65,16 @@ export class DemoObjectStorage implements IObjectStorage {
 
   /**
    * Adds both metadata and data documents for a new object
-   * Returns the object ID from the StoredObject
+   * Returns the StoredObject that was added
    */
-  async add(object: StoredObject): Promise<string> {
+  async add(object: StoredObject): Promise<StoredObject> {
     const id = object.id;
     this.objects.set(id, object);
 
     // Notify all monitors
     this.notifyMonitors();
 
-    return id;
+    return object;
   }
 
   /**

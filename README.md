@@ -39,7 +39,9 @@ function YourComponent() {
 
   // Use storage methods
   const handleAdd = async () => {
-    const id = await storage.add({ metadata: {}, data: {} });
+    const object = new StoredObject();
+    const result = await storage.add(object);
+    console.log('Added object with id:', result.id);
   };
 
   return <div>Your component</div>;

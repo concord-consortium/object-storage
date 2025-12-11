@@ -175,9 +175,9 @@ export class FirebaseObjectStorage implements IObjectStorage {
 
   /**
    * Adds both metadata and data documents for a new object
-   * Returns the object ID from the StoredObject
+   * Returns the StoredObject that was added
    */
-  async add(object: StoredObject): Promise<string> {
+  async add(object: StoredObject): Promise<StoredObject> {
     await this.ensureInitialized();
 
     const newObjectId = object.id;
@@ -192,7 +192,7 @@ export class FirebaseObjectStorage implements IObjectStorage {
     batch.set(metadataRef, metadataDoc);
     await batch.commit();
 
-    return newObjectId;
+    return object;
   }
 
   /**

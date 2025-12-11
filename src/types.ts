@@ -34,7 +34,7 @@ export type ObjectStorageConfig = DemoObjectStorageConfig | FirebaseObjectStorag
 export interface IObjectStorage {
   list(questionOrRefId: string): Promise<StoredObjectMetadataWithId[]>;
   monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction;
-  add(object: StoredObject): Promise<string>;
+  add(object: StoredObject): Promise<StoredObject>;
   read(objectId: string): Promise<StoredObject | undefined>;
   readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined>;
   readData(objectId: string): Promise<StoredObjectData | undefined>;
