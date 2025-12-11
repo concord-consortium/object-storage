@@ -22,7 +22,7 @@ describe("StoredObject", () => {
 
       expect(obj.metadata).toEqual({
         version: 1,
-        type: "typed",
+        type: "untyped",
         items: {},
       });
     });
@@ -501,7 +501,7 @@ describe("StoredObject", () => {
         text: "Content"
       });
 
-      expect(obj.metadata.type).toBe("typed");
+      expect(obj.metadata.type).toBe("untyped");
     });
 
     it("should preserve metadata name and description after adding items", () => {

@@ -122,7 +122,7 @@ describe('DemoObjectStorage', () => {
 
   describe('readMetadata', () => {
     it('should return only the metadata', async () => {
-      const object = new StoredObject({ name: 'Test', description: 'Description' });
+      const object = new StoredObject({ name: 'Test', description: 'Description', type: 'simulation-recording', subType: 'test-subtype' });
       object.addText({ name: 'text', text: 'content' });
 
       const id = await storage.add(object);
@@ -130,9 +130,10 @@ describe('DemoObjectStorage', () => {
 
       expect(metadata).toBeDefined();
       expect(metadata?.version).toBe(1);
-      expect(metadata?.type).toBe('typed');
+      expect(metadata?.type).toBe('simulation-recording');
       expect(metadata?.name).toBe('Test');
       expect(metadata?.description).toBe('Description');
+      expect(metadata?.subType).toBe('test-subtype');
     });
 
     it('should return undefined for non-existent object', async () => {
@@ -250,7 +251,7 @@ describe('DemoObjectStorage', () => {
             id,
             metadata: expect.objectContaining({
               version: 1,
-              type: 'typed'
+              type: 'untyped'
             })
           })
         ])
@@ -479,7 +480,7 @@ describe('DemoObjectStorage', () => {
 
       expect(retrieved).toBeDefined();
       expect(retrieved?.metadata.version).toBe(1);
-      expect(retrieved?.metadata.type).toBe('typed');
+      expect(retrieved?.metadata.type).toBe('untyped');
       expect(Object.keys(retrieved?.metadata.items || {})).toHaveLength(0);
       expect(Object.keys(retrieved?.data || {})).toHaveLength(0);
     });

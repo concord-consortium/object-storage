@@ -55,9 +55,12 @@ export type StoredObjectItemMetadata = {
 export type StoredMetadataItem = StoredImageMetadata | StoredObjectDataTableMetadata | StoredTextMetadata | StoredObjectItemMetadata;
 export type StoredMetadataItems = Record<string, StoredMetadataItem>;
 
+export type StoredObjectType = "simulation-recording" | "untyped"
+
 export type StoredObjectMetadata = {
   version: 1;
-  type: "typed";
+  type: StoredObjectType;
+  subType?: string;
   items: StoredMetadataItems;
   name?: string;
   description?: string;
@@ -69,6 +72,8 @@ export type StoredObjectOptions = {
   id?: string;
   name?: string;
   description?: string;
+  type?: StoredObjectType;
+  subType?: string;
 }
 
 export class StoredObject {
@@ -80,7 +85,7 @@ export class StoredObject {
     this.id = options?.id || nanoid();
     this.metadata = {
       version: 1,
-      type: "typed",
+      type: options?.type || "untyped",
       items: {},
     };
     if (options?.name !== undefined) {
@@ -88,6 +93,9 @@ export class StoredObject {
     }
     if (options?.description !== undefined) {
       this.metadata.description = options.description;
+    }
+    if (options?.subType !== undefined) {
+      this.metadata.subType = options.subType;
     }
     this.data = {};
   }
