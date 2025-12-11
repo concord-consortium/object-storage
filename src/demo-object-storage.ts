@@ -122,13 +122,6 @@ export class DemoObjectStorage implements IObjectStorage {
   }
 
   /**
-   * Generates a new unique ID using nanoid
-   */
-  genId(): string {
-    return nanoid();
-  }
-
-  /**
    * Notifies all active monitors of changes
    */
   private notifyMonitors(): void {

@@ -39,7 +39,6 @@ export interface IObjectStorage {
   readMetadata(objectId: string): Promise<StoredObjectMetadata | undefined>;
   readData(objectId: string): Promise<StoredObjectData | undefined>;
   readDataItem(objectId: string, itemId: string): Promise<any | undefined>;
-  genId(): string;
 }
 
 export interface StoredObjectMetadataWithId {

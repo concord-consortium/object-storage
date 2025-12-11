@@ -291,11 +291,4 @@ export class FirebaseObjectStorage implements IObjectStorage {
     const itemDataString = itemSnapshot.data()?.itemData;
     return itemDataString ? JSON.parse(itemDataString) : undefined;
   }
-
-  /**
-   * Generates a new unique ID using nanoid
-   */
-  genId(): string {
-    return nanoid();
-  }
 }

@@ -64,24 +64,4 @@ describe('FirebaseObjectStorage', () => {
       }).toThrow('Unsupported config version: 0. Expected version 1.');
     });
   });
-
-  describe('genId', () => {
-    it('should generate a unique ID', () => {
-      const id = storage.genId();
-
-      expect(id).toBeDefined();
-      expect(typeof id).toBe('string');
-      expect(id.length).toBeGreaterThan(0);
-    });
-
-    it('should generate different IDs on subsequent calls', () => {
-      const id1 = storage.genId();
-      const id2 = storage.genId();
-      const id3 = storage.genId();
-
-      expect(id1).not.toBe(id2);
-      expect(id2).not.toBe(id3);
-      expect(id1).not.toBe(id3);
-    });
-  });
 });
