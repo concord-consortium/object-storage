@@ -1,3 +1,4 @@
+import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
 export interface DemoObjectStorageConfig {
   version: 1;
   type: "demo";
@@ -34,11 +35,8 @@ export interface AddOptions {
   id?: string;
 }
 
-// Import StoredObject types
-import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
-
 export interface IObjectStorage {
-  list(questionOrRefId: string): Promise<ObjectMetadataWithId[]>;
+  list(questionOrRefId: string): Promise<StoredObjectMetadataWithId[]>;
   monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction;
   add(object: StoredObject, options?: AddOptions): Promise<string>;
   read(objectId: string): Promise<StoredObject | undefined>;
@@ -47,22 +45,22 @@ export interface IObjectStorage {
   genId(): string;
 }
 
-export interface ObjectMetadataWithId {
+export interface StoredObjectMetadataWithId {
   id: string;
   metadata: StoredObjectMetadata;
 }
 
-export interface ObjectDataWithId {
+export interface StoredObjectDataWithId {
   id: string;
   data: StoredObjectData;
 }
 
-export interface ObjectWithId {
+export interface StoredObjectWithId {
   id: string;
   metadata: StoredObjectMetadata;
   data: StoredObjectData;
 }
 
-export type MonitorCallback = (objects: ObjectMetadataWithId[]) => void;
+export type MonitorCallback = (objects: StoredObjectMetadataWithId[]) => void;
 
 export type DemonitorFunction = () => void;

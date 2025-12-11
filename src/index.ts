@@ -8,7 +8,7 @@ export {
   DemoObjectStorageConfig,
   FirebaseObjectStorageUser,
   FirebaseObjectStorageConfig,
-  ObjectWithId,
+  StoredObjectWithId as ObjectWithId,
   MonitorCallback,
   DemonitorFunction
 } from './types';

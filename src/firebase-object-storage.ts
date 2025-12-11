@@ -9,7 +9,7 @@ import {
   MonitorCallback,
   DemonitorFunction,
   AddOptions,
-  ObjectMetadataWithId
+  StoredObjectMetadataWithId
 } from './types';
 import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
 
@@ -137,13 +137,13 @@ export class FirebaseObjectStorage implements IObjectStorage {
   /**
    * Lists metadata documents for objects associated with specific question IDs
    */
-  async list(questionOrRefId: string): Promise<ObjectMetadataWithId[]> {
+  async list(questionOrRefId: string): Promise<StoredObjectMetadataWithId[]> {
     await this.ensureInitialized();
 
     const query = this.getMetadataQuery(questionOrRefId);
     const querySnapshot = await query.get();
 
-    const results: ObjectMetadataWithId[] = [];
+    const results: StoredObjectMetadataWithId[] = [];
     querySnapshot.forEach(doc => {
       results.push({ id: doc.id, metadata: doc.data().metadata });
     });
@@ -162,7 +162,7 @@ export class FirebaseObjectStorage implements IObjectStorage {
     const query = this.getMetadataQuery(questionOrRefId);
 
     const unsub = query.onSnapshot(snapshot => {
-      const results: ObjectMetadataWithId[] = [];
+      const results: StoredObjectMetadataWithId[] = [];
       snapshot.forEach(doc => {
         results.push({ id: doc.id, metadata: doc.data().metadata });
       });

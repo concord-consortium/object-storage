@@ -2,11 +2,11 @@ import { nanoid } from 'nanoid';
 import {
   DemoObjectStorageConfig,
   IObjectStorage,
-  ObjectWithId,
+  StoredObjectWithId,
   MonitorCallback,
   DemonitorFunction,
   AddOptions,
-  ObjectMetadataWithId
+  StoredObjectMetadataWithId
 } from './types';
 import { StoredObject, StoredObjectMetadata, StoredObjectData } from './stored-object';
 
@@ -24,7 +24,7 @@ export class DemoObjectStorage implements IObjectStorage {
     this.monitors = new Map();
   }
 
-  private getQuestionMetadata(): ObjectMetadataWithId[] {
+  private getQuestionMetadata(): StoredObjectMetadataWithId[] {
     // In demo mode, just return all objects since there are no other questions
     // that can use this storage instance
     return Array.from(this.objects.entries()).map(([id, obj]) => {
@@ -35,7 +35,7 @@ export class DemoObjectStorage implements IObjectStorage {
   /**
    * Lists metadata documents for objects associated with specific question IDs
    */
-  async list(questionId: string): Promise<ObjectMetadataWithId[]> {
+  async list(questionId: string): Promise<StoredObjectMetadataWithId[]> {
     return this.getQuestionMetadata();
   }
 
