@@ -1,6 +1,6 @@
 {
   "name": "@concord-consortium/object-storage",
-  "version": "1.0.0-pre.6",
+  "version": "1.0.0-pre.7",
   "description": "A TypeScript library for object storage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
