@@ -43,7 +43,7 @@ export class DemoObjectStorage implements IObjectStorage {
    * Invokes callback at start and on any change
    * Returns a function to stop monitoring
    */
-  monitor(questionId: string, callback: MonitorCallback): DemonitorFunction {
+  async monitor(questionId: string, callback: MonitorCallback): Promise<DemonitorFunction> {
     if (!this.monitors.has(questionId)) {
       this.monitors.set(questionId, []);
     }
