@@ -1,6 +1,6 @@
 {
   "name": "@concord-consortium/object-storage",
-  "version": "1.0.0-pre.7",
+  "version": "1.0.0-pre.8",
   "description": "A TypeScript library for object storage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,8 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepublishOnly": "npm run build",
-    "publish": "npm publish"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "object-storage",

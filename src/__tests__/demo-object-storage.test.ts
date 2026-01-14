@@ -304,7 +304,7 @@ describe('DemoObjectStorage', () => {
 
     it('should stop monitoring when demonitor function is called', async () => {
       const callback = jest.fn<void, [StoredObjectMetadataWithId[]]>();
-      const demonitor = storage.monitor('q1', callback);
+      const demonitor = await storage.monitor('q1', callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
 

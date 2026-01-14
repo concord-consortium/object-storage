@@ -159,8 +159,8 @@ export class FirebaseObjectStorage implements IObjectStorage {
    * Invokes callback at start and on any change
    * Returns a function to stop monitoring
    */
-  monitor(questionOrRefId: string, callback: MonitorCallback): DemonitorFunction {
-    // await this.ensureInitialized();
+  async monitor(questionOrRefId: string, callback: MonitorCallback): Promise<DemonitorFunction> {
+    await this.ensureInitialized();
 
     const query = this.getMetadataQuery(questionOrRefId);
 
