@@ -39,9 +39,10 @@ export class FirebaseObjectStorage implements IObjectStorage {
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
+    // force the SDK to use memory-only persistence to prevent conflicts between different frames/instances
+    await this.app.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+
     if (this.config.user.type === "authenticated") {
-      // ensure any previous auth state is cleared before signing in
-      await this.app.auth().signOut();
       await this.app.auth().signInWithCustomToken(this.config.user.jwt);
     }
 
